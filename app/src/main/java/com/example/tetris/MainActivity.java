@@ -5,8 +5,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+
+import com.example.tetris.game.SurfaceViewGame;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,7 +18,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         getSupportActionBar().hide();
-        setContentView(new GameCanvas(this));
+        setContentView(new SurfaceViewGame(this));
 
         // set vertical orientation
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);

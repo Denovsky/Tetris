@@ -1,62 +1,66 @@
-package com.example.tetris.GamesObjects;
+package com.example.tetris.game.drawer;
 
-import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.view.SurfaceHolder;
 
-import java.util.Arrays;
+import com.example.tetris.GamesObjects.DrawField;
+import com.example.tetris.GamesObjects.UpdateFigure;
+import com.example.tetris.game.HandlerOfObjects;
 
-public class DrawField {
+import java.util.ArrayList;
 
-    private Canvas canvas;
+public class DrawThread extends Thread {
+
     private Paint paint;
-    private int blockSize;
-    private int strokeWitch;
+    private Canvas canvas;
+    private SurfaceHolder surfaceHolder;
+    private int height, width, Y, X, blockSize, strokeWitch;
 
-    private int width, height;
-
-    private int Y, X;
-    public boolean frstPlay = true;
-
+    private static HandlerOfObjects handlerOfObjects;
     private byte[][] field;
 
-    public DrawField(Canvas canvas, Paint paint, byte[][]field, int blockSize, int strokeWitch) {
-        width = canvas.getWidth();
-        height = canvas.getHeight();
+    public volatile boolean running = true; // flag to stop the thread
 
-        this.canvas = canvas;
+    public DrawThread(Paint paint, SurfaceHolder surfaceHolder, ArrayList<Integer> params) {
         this.paint = paint;
-        this.blockSize = blockSize;
-        this.strokeWitch = strokeWitch;
-        this.field = field;
+        this.surfaceHolder = surfaceHolder;
 
-        Y = height / blockSize;
+        blockSize = params.get(0);
+        strokeWitch = params.get(1);
+        width = params.get(2);
+        height = params.get(3);
+
         X = width / blockSize;
+        Y = height / blockSize;
 
-        if (frstPlay) {
-            drawStartingField();
-        }
+        handlerOfObjects = new HandlerOfObjects();
     }
 
-    private void drawStartingField() {
-        field = new byte[Y][X];
-        for (int i = 0; i < Y; i++) {
-            for (int j = 0; j < X; j++) {
-                if (j == 0) { // borders
-                    field[i][j] = 1;
-                } else if (j == X - 1) {
-                    field[i][j] = 1;
-                } else if (i == 0) {
-                    field[i][j] = 1;
-                } else if (i == Y - 1) {
-                    field[i][j] = 1;
+    public void requestStop() {         // метод, которым мы останавливаем поток
+        running = false;
+    }
+
+    @Override
+    public void run() {
+        super.run();
+        while (running) {
+            canvas = surfaceHolder.lockCanvas(); // we "capture" the canvas, block it so that there are no problems
+            if (canvas != null) {
+                try {
+                    if (handlerOfObjects.getField() != null){
+                        field = handlerOfObjects.getField();
+                        drawField();
+                    }
+                } finally {
+                    surfaceHolder.unlockCanvasAndPost(canvas);
                 }
             }
         }
     }
 
-    public void drawEndingField() {
+    public void drawField() {
         int blackBorderY = (height - (Y * blockSize)) / 2;
         int blackBorderX = (width - (X * blockSize)) / 2;
         paint.setStrokeWidth(strokeWitch);
@@ -70,7 +74,7 @@ public class DrawField {
                 int bottom = blackBorderY + (i * blockSize) + blockSize;
 
                 if (field[i][j] == 0) {
-                    paint.setColor(Color.rgb(131,143,111));
+                    paint.setColor(Color.rgb(131, 143, 111));
                     paint.setStyle(Paint.Style.FILL);
                     canvas.drawRect(left, top, right, bottom, paint);
 
@@ -96,14 +100,5 @@ public class DrawField {
                 }
             }
         }
-        frstPlay = false;
-    }
-
-    public byte[][] getField() {
-        return field;
-    }
-
-    public void setField(byte[][] field) {
-        this.field = field;
     }
 }
